@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+
+        
+        <script  type="text/javascript">
+        	
+        	// Create a client instance
+        	    var clientId =  getJSessionId();
+        	    var recData;
+        	    
+    			client = new Paho.MQTT.Client("172.16.1.14", 8000, clientId);
+				console.log("clientId = "+clientId);
+    			// set callback handlers
+    			client.onConnectionLost = onConnectionLost;
+    			client.onMessageArrived = onMessageArrived;
+
+    			// connect the client
+    			client.connect({onSuccess:onConnect});
+    			
+    			
+    			
+    			$(function () {
+			$(document).ready(function () {
+				Highcharts.setOptions({
+					global: {
+						useUTC: false
+					}
+				});
+
+				$('#container').highcharts({
+					chart: {
+						type: 'spline',
+						animation: Highcharts.svg, // don't animate in old IE
+						marginRight: 10,
+						events: {
+							load: function () {
+
+								// set up the updating of the chart each second
+								var series = this.series[0];
+								setInterval(function () {
+									//value = document.getElementById('receveMsg').value; 
+									console.log("recData = "+recData);
+								
+									var x = (new Date()).getTime(), // current time
+										y = parseInt(recData);
+									series.addPoint([x, y], true, true);
+								}, 1000);
+							}
+						}
+					},
+					title: {
+						text: 'Live VerneMQ data'
+					},
+					xAxis: {
+						type: 'datetime',
+						tickPixelInterval: 150
+					},
+					yAxis: {
+						title: {
+							text: 'Value'
+						},
+						plotLines: [{
+							value: 0,
+							width: 1,
+							color: '#808080'
+						}]
+					},
+					tooltip: {
+						formatter: function () {
+							return '<b>' + this.series.name + '</b><br/>' +
+								Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', this.x) + '<br/>' +
+								Highcharts.numberFormat(this.y, 2);
+						}
+					},
+					legend: {
+						enabled: false
+					},
+					exporting: {
+						enabled: false
+					},
+					series: [{
+						name: 'data',
+						data: (function () {
+							// generate an array of random data
+							var data = [],
+								time = (new Date()).getTime(),
+								i;
+							    value = 0;
+							
+							
+							for (i = -19; i <= 0; i += 1) {
+								data.push({
+									x: time + i * 1000,
+									y: null
+								});
+							}
+							return data;
+						}())
+					}]
+				});
+			});
+		});
+    			
+        	
+        	function sendData(){
+        	    
+        	    var msg = document.getElementById('sendMsg').value;
+        		message = new Paho.MQTT.Message(msg);
+  				message.destinationName = "MQTT";
+  				client.send(message);
+    			
+        	}
+        	
+        	function getJSessionId(){
+        	    var session_id = '';
+				var strCookies = document.cookie;
+				var cookiearray = strCookies.split(';')
+				for(var i=0; i<cookiearray.length; i++){
+				  name = cookiearray[i].split('=')[0];
+				  value = cookiearray[i].split('=')[1];
+				  console.log(name+" = "+value);
+				  if(name == 'sid')
+				   session_id = value;
+				}
+				
+				if(session_id == ''){
+				
+					var base = 36, pattern = new String('00000000000000000000');
+					returnValue = new String(pattern + Math.floor(Math.random() * Math.pow(base, pattern.length)).toString(base));
+					session_id = returnValue.substr(returnValue.length - pattern.length).toLowerCase();
+				     
+				}
+
+				console.log("session_id = "+session_id);
+				return session_id;
+			}
+        	
+        	// called when the client connects
+			function onConnect() {
+			// Once a connection has been made, make a subscription and send a message.
+				console.log("onConnect");
+				client.subscribe("MQTT", 1);
+
+			}
+
+			// called when the client loses its connection
+			function onConnectionLost(responseObject) {
+			  if (responseObject.errorCode !== 0) {
+				console.log("onConnectionLost:"+responseObject.errorMessage);
+			  }
+			}
+
+			// called when a message arrives
+			function onMessageArrived(message) {
+			  console.log("onMessageArrived:"+message.payloadString);
+			  var form = document.getElementById("form1");
+			  form.receiveMsg.value = message.payloadString;
+			  recData = message.payloadString;
+			}
+        	
+        </script>
+        
+    </head>
+    <body>
+
+
+	<h2>Send/Receive data from VerneMQ.</h2>
+	
+	<br><br><br>
+	<div id="container" style="min-width: 300px; height: 400px; width: 800px; margin: 0"></div>
+	
+	<br><br>
+	<form action="" id="form1">
+  		
+  		send msg<br> 
+  		<textarea id="sendMsg" rows="5" cols="40"></textarea>&nbsp;&nbsp;&nbsp;&nbsp;
+  		<input type="button" value="send data"  onclick="getJSessionId();">
+  		 <br><br><br>
+  		 <p>received data</p>
+  		 <textarea id="receveMsg" name="receiveMsg" rows="5" cols="40" disabled="disabled"></textarea>
+     </form>
+ </body>
+</html>

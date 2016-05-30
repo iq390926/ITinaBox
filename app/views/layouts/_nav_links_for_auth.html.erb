@@ -1,0 +1,53 @@
+ <!--navbar 左側-->
+<ul class="nav navbar-nav">
+
+	<% if user_signed_in? %>
+  
+	  <!--<%page = session[:pages]%>-->
+	  <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Dashboard<span class="caret"></span></a>
+		  <ul class="dropdown-menu">
+			<% session[:pages].each do |p| %>
+				<% if p.parent_id == 0 %>
+					<li><a href=<%= p.name %>> <%= p.title %> </a></li>
+				<% end %>	
+			<% end %>
+		  </ul>   
+	  </li>	  
+	  
+	  <!--<%page = session[:pages]%>-->
+	  <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Services<span class="caret"></span></a>
+		  <ul class="dropdown-menu">
+			<% session[:pages].each do |p| %>
+				<% if p.parent_id == 1 %>
+					<li><a href=<%= p.name %>> <%= p.title %> </a></li>
+				<% end %>	
+			<% end %>
+		  </ul>   
+	  </li>	  
+  
+	<% end %>
+</ul>
+
+ <!--navbar 右側-->
+  <ul class="nav navbar-nav navbar-right">
+	<% if user_signed_in? %>
+	  <li><a href="#">User :  <%= current_user.name  %></a></li>
+	  <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Account<span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li><%= link_to 'Edit account', edit_user_registration_path %></li>
+			<li><%= link_to 'Log out', destroy_user_session_path, :method=>'delete' %></li>
+		</ul>
+	  </li>	   
+		  
+	<% else%>
+	  <li><%= link_to 'Sign in', new_user_session_path %></li>
+	  <li><%= link_to 'Register', new_user_registration_path %></li>
+	<% end%> 
+  </ul>
+
+
+
+
+
+
+
